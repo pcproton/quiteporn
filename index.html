@@ -350,6 +350,10 @@
 <body>
 
 <nav>
+  <div style="position:absolute;left:20px;display:flex;align-items:center;gap:7px;">
+    <span style="font-size:18px;">☪️</span>
+    <span style="font-family:'DM Serif Display',serif;font-size:15px;color:#2d5a3d;letter-spacing:-0.3px;">Muslim Made</span>
+  </div>
   <div class="nav-tabs">
     <button class="nav-btn active" onclick="showPage('tracker', this)">Tracker</button>
     <button class="nav-btn" onclick="showPage('quit', this)">How to Quit</button>
@@ -416,6 +420,12 @@
   <div class="tasks-grid" id="tasks-grid"></div>
 
   <div class="info-section">
+    <div class="tag">Spirituality</div>
+    <h2>The Islamic Perspective</h2>
+    <p>Guarding one's gaze (lowering the eyes) is a Quranic command (24:30). The Prophet ﷺ said: <em>"The eyes commit zina (adultery) and their zina is the look."</em> Use your daily prayers as anchor points — each salah is a reset. Recite <em>Astaghfirullah</em> when a urge hits; it redirects the mind and brings peace. Fasting (especially voluntary fasts on Mondays/Thursdays) is also prescribed as a shield.</p>
+  </div>
+
+  <div class="info-section">
     <div class="tag">Why it's hard</div>
     <h2>Understanding the Addiction</h2>
     <p>Pornography triggers the same dopamine pathways as drugs and alcohol. Over time, the brain rewires itself — requiring more stimulation for the same effect. This is called neuroplasticity, and the good news is: it works in reverse too. Every clean day literally rewires your brain back.</p>
@@ -437,39 +447,58 @@
     <h2>Identify & Interrupt Your Triggers</h2>
     <p>Common triggers: boredom, loneliness, stress, and late nights alone with a device. The moment you notice a trigger, use the 5-second rule — count 5-4-3-2-1 and physically move. Stand up, go outside, or call someone. The urge typically passes in 10–20 minutes if you don't feed it.</p>
   </div>
+</div>
 
-  <div class="info-section">
-    <div class="tag">Spirituality</div>
-    <h2>The Islamic Perspective</h2>
-    <p>Guarding one's gaze (lowering the eyes) is a Quranic command (24:30). The Prophet ﷺ said: <em>"The eyes commit zina (adultery) and their zina is the look."</em> Use your daily prayers as anchor points — each salah is a reset. Recite <em>Astaghfirullah</em> when a urge hits; it redirects the mind and brings peace. Fasting (especially voluntary fasts on Mondays/Thursdays) is also prescribed as a shield.</p>
+<!-- CONFIRM MODAL -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:10px;">Reset Tracker?</div>
+    <div style="font-size:14px;color:#7a7570;margin-bottom:24px;line-height:1.6;">This will wipe all 40 days of progress. This cannot be undone.</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeModal()" style="flex:1;padding:12px;border:1px solid #e0dbd4;border-radius:10px;background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:#7a7570;">Cancel</button>
+      <button onclick="confirmReset()" style="flex:1;padding:12px;border:none;border-radius:10px;background:#c0392b;color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Yes, Reset</button>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  // ---- STATE ----
   const TOTAL = 40;
-  let state = JSON.parse(localStorage.getItem('clear-tracker') || 'null') || { days: {}, currentDay: 1 };
-  let tasks = JSON.parse(localStorage.getItem('clear-tasks') || 'null') || {};
+  let state = { days: {}, currentDay: 1 };
+  let tasks = {};
 
   const TASKS = [
-    { id: 'block', icon: '🔒', title: 'Install a content blocker', desc: "Set up Cold Turkey, BlockSite, or your router's parental controls." },
-    { id: 'accountability', icon: '🤝', title: 'Tell someone you trust', desc: 'Accountability partners double your chance of success. Pick one person today.' },
-    { id: 'urge', icon: '⏱️', title: 'Practise the 10-min rule', desc: 'When a urge hits, delay 10 minutes before acting. It will pass.' },
-    { id: 'exercise', icon: '🏃', title: 'Exercise today', desc: 'Even a 20-minute walk floods your brain with healthy dopamine.' },
-    { id: 'phone', icon: '📵', title: 'Keep phone out of bedroom', desc: 'Charge it in another room tonight. This single habit is transformative.' },
-    { id: 'journal', icon: '📓', title: 'Write your "why"', desc: 'List 3 reasons you want to quit. Read them when cravings hit.' },
-    { id: 'sleep', icon: '😴', title: 'Fix your sleep schedule', desc: 'Set a consistent bedtime. Fatigue is a major trigger.' },
-    { id: 'replace', icon: '🎯', title: 'Find a replacement habit', desc: 'Pick one hobby or activity to do instead when urges arise.' },
-    { id: 'dua', icon: '🤲', title: 'Make du\'a for protection', desc: 'Recite "Astaghfirullah" 10x and ask Allah for strength. Do this daily.' },
-    { id: 'media', icon: '📱', title: 'Audit your social media', desc: 'Unfollow or mute any accounts that could become a trigger.' },
+    { id: 'block',          icon: '🔒', title: 'Install a content blocker',   desc: "Set up Cold Turkey, BlockSite, or your router's parental controls." },
+    { id: 'accountability', icon: '🤝', title: 'Tell someone you trust',       desc: 'Accountability partners double your chance of success. Pick one person today.' },
+    { id: 'urge',           icon: '⏱️', title: 'Practise the 10-min rule',     desc: 'When an urge hits, delay 10 minutes before acting. It will pass.' },
+    { id: 'exercise',       icon: '🏃', title: 'Exercise today',               desc: 'Even a 20-minute walk floods your brain with healthy dopamine.' },
+    { id: 'phone',          icon: '📵', title: 'Keep phone out of bedroom',    desc: 'Charge it in another room tonight. This single habit is transformative.' },
+    { id: 'journal',        icon: '📓', title: 'Write your "why"',             desc: 'List 3 reasons you want to quit. Read them when cravings hit.' },
+    { id: 'sleep',          icon: '😴', title: 'Fix your sleep schedule',      desc: 'Set a consistent bedtime. Fatigue is a major trigger.' },
+    { id: 'replace',        icon: '🎯', title: 'Find a replacement habit',     desc: 'Pick one hobby or activity to do instead when urges arise.' },
+    { id: 'dua',            icon: '🤲', title: "Make du'a for forgiveness and protection",     desc: 'Recite "Astaghfirullah" 10x and ask Allah for strength. Do this daily.' },
+    { id: 'media',          icon: '📱', title: 'Audit your social media',      desc: 'Unfollow or mute any accounts that could become a trigger.' },
   ];
 
-  // ---- SAVE ----
-  function save() {
-    localStorage.setItem('clear-tracker', JSON.stringify(state));
-    localStorage.setItem('clear-tasks', JSON.stringify(tasks));
+  // ---- STORAGE ----
+  function saveData() {
+    try {
+      localStorage.setItem('clear-tracker', JSON.stringify(state));
+      localStorage.setItem('clear-tasks', JSON.stringify(tasks));
+    } catch(e) { console.warn('Save failed', e); }
+  }
+
+  function loadData() {
+    try {
+      const t = localStorage.getItem('clear-tracker');
+      if (t) state = JSON.parse(t);
+    } catch(e) {}
+    try {
+      const tk = localStorage.getItem('clear-tasks');
+      if (tk) tasks = JSON.parse(tk);
+    } catch(e) {}
   }
 
   // ---- TOAST ----
@@ -480,7 +509,27 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  // ---- MODAL ----
+  function resetTracker() {
+    const overlay = document.getElementById('modal-overlay');
+    overlay.style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+  }
+
+  async function confirmReset() {
+    closeModal();
+    state = { days: {}, currentDay: 1 };
+    saveData();
+    buildGrid();
+    showToast('Tracker reset. Fresh start. 🌱');
+  }
+
   // ---- TRACKER ----
+  let popoverDay = null;
+
   function buildGrid() {
     const grid = document.getElementById('day-grid');
     grid.innerHTML = '';
@@ -492,9 +541,53 @@
       else if (status === 'fail') { cell.classList.add('fail'); cell.innerHTML = '<span class="tick">✗</span>'; }
       else { cell.textContent = i; }
       if (i === state.currentDay) cell.classList.add('today');
+      if (status) {
+        cell.title = 'Click to delete';
+        cell.addEventListener('click', (function(day, el) {
+          return function(e) { e.stopPropagation(); openDayPopover(day, el); };
+        })(i, cell));
+      }
       grid.appendChild(cell);
     }
     updateStats();
+  }
+
+  function openDayPopover(day, cell) {
+    closePopover();
+    popoverDay = day;
+    const pop = document.createElement('div');
+    pop.id = 'day-popover';
+    pop.style.cssText = 'position:fixed;background:#fff;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,0.18);padding:12px 14px;z-index:300;min-width:160px;';
+    pop.innerHTML = '<div style="font-size:12px;color:#7a7570;margin-bottom:8px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;">Day ' + day + '</div>'
+      + '<button id="del-btn" style="width:100%;padding:9px 10px;background:#fde8e6;color:#c0392b;border:none;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">🗑 Delete record</button>';
+    document.body.appendChild(pop);
+    // Position below cell, clamped to viewport
+    const rect = cell.getBoundingClientRect();
+    const popW = 160, popH = 80;
+    let left = rect.left + rect.width / 2 - popW / 2;
+    let top = rect.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
+    if (top + popH > window.innerHeight - 8) top = rect.top - popH - 8;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    document.getElementById('del-btn').addEventListener('click', function(e) { e.stopPropagation(); deleteDay(day); });
+    setTimeout(() => document.addEventListener('click', closePopover), 0);
+  }
+
+  function closePopover() {
+    const existing = document.getElementById('day-popover');
+    if (existing) existing.remove();
+    document.removeEventListener('click', closePopover);
+    popoverDay = null;
+  }
+
+  function deleteDay(day) {
+    closePopover();
+    delete state.days[day];
+    if (state.currentDay > day) state.currentDay = day;
+    saveData();
+    buildGrid();
+    showToast('Day ' + day + ' record deleted.');
   }
 
   function markDay(clean) {
@@ -502,19 +595,17 @@
     if (day > TOTAL) { showToast('Challenge complete! 🎉'); return; }
     state.days[day] = clean ? 'done' : 'fail';
     if (day < TOTAL) state.currentDay = day + 1;
-    save();
+    saveData();
     buildGrid();
     showToast(clean ? `Day ${day} ✓ — keep going!` : `Day ${day} logged. Get back up.`);
   }
 
   function updateStats() {
-    let clean = 0, streak = 0, best = 0, cur = 0;
+    let clean = 0, best = 0, cur = 0, streak = 0;
     for (let i = 1; i <= TOTAL; i++) {
       if (state.days[i] === 'done') { clean++; cur++; best = Math.max(best, cur); }
       else if (state.days[i] === 'fail') { cur = 0; }
     }
-    // current streak from latest day backwards
-    streak = 0;
     for (let i = state.currentDay - 1; i >= 1; i--) {
       if (state.days[i] === 'done') streak++;
       else break;
@@ -524,15 +615,6 @@
     document.getElementById('stat-clean').textContent = clean;
     document.getElementById('stat-best').textContent = best;
     document.getElementById('stat-remain').textContent = Math.max(0, TOTAL - (state.currentDay - 1));
-  }
-
-  function resetTracker() {
-    if (!confirm('⚠️ Reset all 40 days? This will wipe your entire tracker. This cannot be undone.')) return;
-    localStorage.removeItem('clear-tracker');
-    state = { days: {}, currentDay: 1 };
-    save();
-    buildGrid();
-    showToast('Tracker reset. Fresh start. 🌱');
   }
 
   // ---- TASKS ----
@@ -551,7 +633,7 @@
 
   function toggleTask(id) {
     tasks[id] = !tasks[id];
-    save();
+    saveData();
     buildTasks();
     showToast(tasks[id] ? 'Task completed ✓' : 'Task unmarked');
   }
@@ -561,7 +643,7 @@
     const pct = Math.round((done / TASKS.length) * 100);
     document.getElementById('prog-fill').style.width = pct + '%';
     document.getElementById('prog-pct').textContent = pct + '%';
-    const msgs = ['Complete tasks below to build your recovery toolkit', 'Good start — keep going!', 'You\'re building momentum!', 'More than halfway — great work!', 'Almost there — incredible commitment!', '100% toolkit complete. You\'re ready. 🌱'];
+    const msgs = ['Complete tasks below to build your recovery toolkit', 'Good start — keep going!', "You're building momentum!", 'More than halfway — great work!', 'Almost there — incredible commitment!', '100% toolkit complete. You\'re ready. 🌱'];
     const idx = pct === 100 ? 5 : pct >= 80 ? 4 : pct >= 60 ? 3 : pct >= 40 ? 2 : pct > 0 ? 1 : 0;
     document.getElementById('prog-sub').textContent = msgs[idx];
   }
@@ -575,6 +657,7 @@
   }
 
   // ---- INIT ----
+  loadData();
   buildGrid();
   buildTasks();
 </script>
